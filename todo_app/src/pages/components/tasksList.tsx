@@ -1,4 +1,5 @@
 import { Search, Check, FilePenLine, Trash2, Calendar1 } from "lucide-react";
+import TasksForm from "./tasksForm";
 export default function TasksList() {
   return <>
     <div className="mx-auto max-w-6xl px-6 flex flex-col gap-4">
@@ -6,6 +7,7 @@ export default function TasksList() {
             <Search width={20} className="text-slate-500" />
             <input type="text" placeholder="Search Tasks" className="placeholder-slate-500 font-medium w-full border-none outline-none "></input>
         </div>
+        <TasksForm />
         <div className="flex items-center justify-between px-1">
             <h2 className="text-xl font-bold">All Tasks</h2>
             <span className="text-sm text-slate-500">5 Tasks</span>

@@ -1,17 +1,17 @@
-import { Menu, Sun } from "lucide-react";
+import { Menu } from "lucide-react";
 import Image from "next/image";
+import ThemeToggle from "./themeToggle";
 
 export default function NavBar() {
   return (
-    <>
-      <nav className="bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-6xl bg-white  p-5 flex items-center justify-between">
+      <nav className="relative bg-white  border-b border-slate-200 z-40">
+        <div className="mx-auto max-w-6xl  p-5 flex items-center justify-between">
           <div className="flex gap-2 items-center">
             <Menu size={25} />
             <h2 className="text-xl font-bold">Taskify</h2>
           </div>
           <div className="flex gap-4 items-center">
-            <Sun></Sun>
+            <ThemeToggle />
             <div className="w-10 h-10">
               <Image
               className="rounded-full"
@@ -24,6 +24,5 @@ export default function NavBar() {
           </div>
         </div>
       </nav>
-    </>
   );
 }
