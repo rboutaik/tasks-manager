@@ -5,7 +5,7 @@ import ThemeToggle from "@/components/themeToggle";
 
 export default function Home() {
   return (
-    <div className="relative h-screen w-full transition-all duration-300 bg-slate-50 dark:bg-slate-900">
+    <div className="relative h-screen w-full transition-all duration-300 bg-slate-100 dark:bg-slate-900">
       <NavBar></NavBar>
       <SideBar></SideBar>
       <TasksList></TasksList>

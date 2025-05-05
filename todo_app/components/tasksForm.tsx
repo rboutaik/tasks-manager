@@ -59,14 +59,14 @@ export default function TasksForm() {
   return (
     <form
       onSubmit={handleSubmit((data) => console.log(data))}
-      className="flex flex-col bg-white dark:bg-slate-800 border-[1px] border-slate-200 dark:border-slate-500 p-4 rounded-xl gap-2 font-medium "
+      className="flex flex-col bg-slate-50 dark:bg-slate-800 border-[1px] border-slate-200 dark:border-slate-500 p-4 rounded-xl gap-2 font-medium "
     >
       <div className="flex items-center justify-between font-bold">
         <span>Add New Task</span>
         <X width={18} />
       </div>
       <div className="flex flex-col justify-center items-center pt-4 pb-2">
-        <div className="bg-slate-50 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
+        <div className="bg-slate-100 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
           <input
             {...register("tasktitle", { required: "Title is required" })}
             type="text"
@@ -81,7 +81,7 @@ export default function TasksForm() {
         </div>
       </div>
       <div className="flex flex-col justify-center items-center py-5">
-        <div className="bg-slate-50 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
+        <div className="bg-slate-100 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
           <textarea
             {...register("taskdescription", {
               required: "Description is required",
@@ -98,7 +98,7 @@ export default function TasksForm() {
         </div>
       </div>
       <div className="flex gap-4">
-        <div className=" flex-1 bg-slate-50 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl px-2 relative">
+        <div className=" flex-1 bg-slate-100 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl px-2 relative">
           <select
             {...register("priority", { required: "Priority is required" })}
             className="bg-inherit  w-full py-1 px-3 outline-none"
@@ -114,7 +114,7 @@ export default function TasksForm() {
             </p>
           )}
         </div>
-        <div className="flex-1 bg-slate-50 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl px-2 relative">
+        <div className="flex-1 bg-slate-100 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl px-2 relative">
           <select
             {...register("category", { required: "Category is required" })}
             className="bg-inherit w-full py-1 px-3 outline-none"
@@ -132,7 +132,7 @@ export default function TasksForm() {
         </div>
       </div>
       <div className="flex flex-col justify-center items-center py-5">
-        <div className="bg-slate-50 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
+        <div className="bg-slate-100 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
           <input
             {...register("date", { required: "Date is required" })}
             type="date"
