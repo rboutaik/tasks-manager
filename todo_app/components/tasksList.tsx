@@ -3,9 +3,9 @@ import TasksForm from "./tasksForm";
 export default function TasksList() {
   return <>
     <div className="mx-auto max-w-6xl px-6 flex flex-col gap-4">
-        <div className="flex items-center justify-start bg-slate-100 mt-6 rounded-xl py-2 border border-slate-300 px-3 gap-2">
+        <div className="flex items-center justify-start bg-white dark:bg-slate-800 mt-6 rounded-xl py-2 border border-slate-300 dark:border-slate-700 px-3 gap-2">
             <Search width={20} className="text-slate-500" />
-            <input type="text" placeholder="Search Tasks" className="placeholder-slate-500 font-medium w-full border-none outline-none "></input>
+            <input type="text" placeholder="Search Tasks" className="bg-inherit placeholder-slate-500 font-medium w-full border-none outline-none "></input>
         </div>
         <TasksForm />
         <div className="flex items-center justify-between px-1">
@@ -14,7 +14,7 @@ export default function TasksList() {
         </div>
         {
             [1, 2, 3 ,4].map((item, index) => {
-                return <div className="bg-white px-2 py-4 rounded-xl border-l-3 border-red-600 flex-flex-col shadow-sm">
+                return <div key={index} className="bg-white dark:bg-slate-800 px-2 py-4 rounded-xl border-l-4 border-red-500 flex-flex-col shadow-md">
                 <div className=" flex items-center justify-between ">
                     <div className="flex flex-col">
                         <div className="flex items-center justify-start gap-3">
@@ -32,25 +32,26 @@ export default function TasksList() {
                 </div>
                 {/* here three elems */}
                 <div className="flex items-center justify-start gap-2 pt-2 pl-7 flex-wrap max-w-[75%]">
-                    <div className="flex items-center justify-center text-xs bg-slate-100 text-slate-500 font-medium px-1 rounded-md">
+                    <div className="flex items-center justify-center text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium px-2 rounded-md">
                         <div className="flex items-center gap-1">
                             <Calendar1 width={14}/>
                             <span>2025-05-04</span>
                         </div>
                     </div>
-                    <div className="flex items-center justify-center text-xs bg-purple-600 text-white font-medium p-1 rounded-md">
+                    <div className="flex items-center justify-center text-xs bg-purple-600 dark:bg-purple-700 text-white font-medium p-1 px-2 rounded-md">
                         <div className="flex items-center">
                             <span>Development</span>
                         </div>
                     </div>
-                    <div className="flex items-center justify-center text-xs bg-red-100 text-red-600 p-1 font-medium px-1 rounded-md">
-                        <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-center text-xs bg-red-100 text-red-600  p-1 px-2 font-medium rounded-md">
+                        <div className="flex items-center justify-end gap-1">
                             <span>High</span>
                         </div>
                     </div>
                 </div>
             </div>
             })
+            //bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600
         }
         
         

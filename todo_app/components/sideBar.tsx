@@ -4,8 +4,8 @@ export default function SideBar() {
   return (
     <div>
         <div className="absolute bg-black/40 top-0 right-0 left-0 bottom-0 w-[100vw] z-10"></div>
-        <div className="bg-white border-r-1 border-slate-200 flex flex-col  w-64 h-[calc(100vh-85px)] absolute px-4 py-5 gap-5 z-20">
-        <div className="flex items-center gap-2 justify-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl">
+        <div className="bg-white dark:bg-slate-800 border-r-[1px] border-slate-200 dark:border-slate-700 flex flex-col  w-64 h-[calc(100vh-85px)] absolute px-4 py-5 gap-5 z-20">
+        <div className="flex items-center gap-2 justify-center bg-teal-500 dark:bg-teal-600  hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl">
             <Plus />
             <button>New Task</button>
         </div>
