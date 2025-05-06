@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import {
   Search,
   Check,
@@ -11,109 +10,80 @@ import {
   CheckCheck,
 } from "lucide-react";
 import TasksForm from "./tasksForm";
-
-type Ttasks = {
-    id: number,
-    title: string,
-    completed: boolean,
-    date: string,
-    category: string,
-    priority: string,
-
-};
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  setSearchTerm,
+  deleteTask,
+  toggleComplete,
+  selectTask,
+  selectAllTasks,
+  completeSelected,
+  deleteSelected,
+  deleteCompleted,
+} from "@/lib/redux/features/taskSlice";
+import { useState } from "react";
+import { Task } from "@/lib/types";
 
 export default function TasksList() {
-  const [tasks, setTasks] = useState<Ttasks[]>([
-    {
-      id: 1,
-      title: "Implement Redux store",
-      completed: false,
-      date: "2025-05-04",
-      category: "Development",
-      priority: "High",
-    },
-    {
-      id: 2,
-      title: "Design user dashboard",
-      completed: false,
-      date: "2025-05-05",
-      category: "Design",
-      priority: "Medium",
-    },
-    {
-      id: 3,
-      title: "Fix navigation bugs",
-      completed: false,
-      date: "2025-05-06",
-      category: "Development",
-      priority: "High",
-    },
-    {
-      id: 4,
-      title: "Update documentation",
-      completed: false,
-      date: "2025-05-07",
-      category: "Documentation",
-      priority: "Low",
-    },
-  ]);
-
-  const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [spreadItem, setSpreadItem] = useState(-1);
+  const dispatch = useAppDispatch();
+  const { tasks, selectedTasks, searchTerm, filter } = useAppSelector(
+    (state) => state.tasks
+  );
+  const { categories } = useAppSelector((state) => state.categories);
 
   const filteredTasks = tasks.filter((task) =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredTaskIds = filteredTasks.map((task) => task.id);
   const allSelected =
-    filteredTasks.length > 0 && selectedTasks.length === filteredTasks.length;
+    filteredTasks.length > 0 &&
+    filteredTaskIds.every((id: number) => selectedTasks.includes(id));
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(8);
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks
+    .filter((item) => {
+      if (filter === "Active") return !item.completed;
+      if (filter === "Completed") return item.completed;
+      return true;
+    })
+    .slice(indexOfFirstTask, indexOfLastTask);
+  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const handleSelectAll = () => {
-    if (allSelected) {
-      setSelectedTasks([]);
-    } else {
-      setSelectedTasks(filteredTasks.map((task) => task.id));
-    }
+    dispatch(selectAllTasks(filteredTaskIds));
   };
 
-  const handleSelectTask = (taskId : number) => {
-    if (selectedTasks.includes(taskId)) {
-      setSelectedTasks(selectedTasks.filter((id) => id !== taskId));
-    } else {
-      setSelectedTasks([...selectedTasks, taskId]);
-    }
+  const handleSelectTask = (taskId: number) => {
+    dispatch(selectTask(taskId));
   };
 
   const handleDeleteSelected = () => {
-      setTasks(tasks.filter((task) => !selectedTasks.includes(task.id)));
-      setSelectedTasks([]);
-    };
-    
-    
+    dispatch(deleteSelected());
+  };
+
   const handleDeleteCompleted = () => {
-    setTasks(tasks.filter((task) => !task.completed));
+    dispatch(deleteCompleted());
   };
 
   const handleCompleteSelected = () => {
-    setTasks(
-      tasks.map((task) =>
-        selectedTasks.includes(task.id) ? { ...task, completed: true } : task
-      )
-    );
-    setSelectedTasks([]);
+    dispatch(completeSelected());
   };
 
-  const handleDeleteTask = (taskId:number) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
-    setSelectedTasks(selectedTasks.filter((id) => id !== taskId));
+  const handleDeleteTask = (taskId: number) => {
+    dispatch(deleteTask(taskId));
   };
 
-  const handleToggleComplete = (taskId:number) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleToggleComplete = (taskId: number) => {
+    dispatch(toggleComplete(taskId));
   };
 
   return (
@@ -124,32 +94,39 @@ export default function TasksList() {
           type="text"
           placeholder="Search Tasks"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => dispatch(setSearchTerm(e.target.value))}
           className="bg-inherit placeholder-slate-500 font-medium w-full border-none outline-none"
         />
       </div>
 
-      <TasksForm />
+      <TasksForm
+        editingTask={editingTask}
+        onCancelEdit={() => setEditingTask(null)}
+      />
 
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold">All Tasks</h2>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-slate-500 dark:text-slate-400">
             {filteredTasks.length} Tasks
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-            <button
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            aria-label="Close"
+            name="btn"
             onClick={handleDeleteCompleted}
             className="flex items-center gap-1 py-1 px-3 text-sm bg-teal-500 hover:bg-teal-600 text-white  rounded-md transition-colors"
-            >
+          >
             <CheckCheck size={16} />
             <span>Delete Completed</span>
-            </button>
+          </button>
           {selectedTasks.length > 0 && (
             <>
               <button
+                aria-label="Close"
+                name="btn"
                 onClick={handleCompleteSelected}
                 className="flex items-center gap-1 py-1 px-3 text-sm bg-green-500  text-white rounded-md hover:bg-green-600 transition-colors"
               >
@@ -157,6 +134,8 @@ export default function TasksList() {
                 <span>Complete</span>
               </button>
               <button
+                aria-label="Close"
+                name="btn"
                 onClick={handleDeleteSelected}
                 className="flex items-center gap-1 py-1 px-3 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
               >
@@ -166,6 +145,8 @@ export default function TasksList() {
             </>
           )}
           <button
+            aria-label="Close"
+            name="btn"
             onClick={handleSelectAll}
             className={`flex items-center gap-1 py-1 px-3 text-sm rounded-md transition-colors ${
               allSelected
@@ -179,7 +160,7 @@ export default function TasksList() {
         </div>
       </div>
 
-      {filteredTasks.map((task) => (
+      {currentTasks.map((task) => (
         <div
           key={task.id}
           className={`bg-slate-50 dark:bg-slate-800 px-2 py-4 rounded-xl border-l-4 ${
@@ -189,18 +170,22 @@ export default function TasksList() {
           }`}
         >
           <div className="absolute top-2 right-2">
-            <input
-              type="checkbox"
-              checked={selectedTasks.includes(task.id)}
-              onChange={() => handleSelectTask(task.id)}
-              className="w-4 h-4 accent-blue-500"
-            />
+            <label>
+              <input
+                type="checkbox"
+                checked={selectedTasks.includes(task.id)}
+                onChange={() => handleSelectTask(task.id)}
+                className="w-4 h-4 accent-blue-500"
+              />
+            </label>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <div className="flex items-center justify-start gap-3">
                 <button
+                  aria-label="Close"
+                  name="btn"
                   onClick={() => handleToggleComplete(task.id)}
                   className={`flex-shrink-0 mt-1 w-5 h-5 rounded-md flex items-center justify-center ${
                     task.completed
@@ -223,6 +208,7 @@ export default function TasksList() {
               <FilePenLine
                 width={22}
                 className="cursor-pointer hover:text-blue-500"
+                onClick={() => setEditingTask(task)}
               />
               <Trash2
                 width={22}
@@ -239,7 +225,11 @@ export default function TasksList() {
                 <span>{task.date}</span>
               </div>
             </div>
-            <div className="flex items-center justify-center text-xs bg-purple-600 dark:bg-purple-700 text-white font-medium p-1 px-2 rounded-md">
+            <div
+              className={`flex items-center justify-center text-xs ${
+                categories.find((item) => item.name === task.category)?.color ?? "bg-purple-600"
+              } text-white font-medium p-1 px-2 rounded-md`}
+            >
               <div className="flex items-center">
                 <span>{task.category}</span>
               </div>
@@ -258,14 +248,73 @@ export default function TasksList() {
               </div>
             </div>
           </div>
+          <div
+            className="flex items-center justify-end"
+            onClick={() =>
+              task.id === spreadItem
+                ? setSpreadItem(-1)
+                : setSpreadItem(task.id)
+            }
+          >
+            <span className="text-xs font-bold text-teal-600 dark:text-teal-400 cursor-pointer">
+              {task.id !== spreadItem ? "Show" : "Hide"} Desciption
+            </span>
+          </div>
+          {spreadItem === task.id && (
+            <div className="px-2 pt-4 text-wrap">{task.description}</div>
+          )}
         </div>
       ))}
 
-      {filteredTasks.length === 0 && (
+      {currentTasks.length === 0 && (
         <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl text-center shadow-sm">
           <p className="text-slate-600 dark:text-slate-500">
             No tasks found. Add a new task or adjust your search.
           </p>
+        </div>
+      )}
+
+      {filteredTasks.length > tasksPerPage && (
+        <div className="flex justify-center mt-4">
+          <nav className="flex items-center gap-1">
+            <button
+              aria-label="Close"
+              name="btn"
+              onClick={() => paginate(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (number) => (
+                <button
+                  aria-label="Close"
+                  name="btn"
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === number
+                      ? "bg-blue-500 text-white"
+                      : "bg-slate-200 dark:bg-slate-700"
+                  }`}
+                >
+                  {number}
+                </button>
+              )
+            )}
+
+            <button
+              aria-label="Close"
+              name="btn"
+              onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </nav>
         </div>
       )}
     </div>

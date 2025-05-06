@@ -7,7 +7,11 @@ module.exports = {
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        merienda: ['Merienda', 'cursive'],
+      },
+    },
   },
   plugins: [],
 };

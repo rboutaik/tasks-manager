@@ -4,12 +4,20 @@ import type React from "react";
 
 import { Plus, X, Check } from "lucide-react";
 import { useState } from "react";
-
-const initialCategories = [
-  { id: 1, name: "Development", color: "bg-teal-400" },
-  { id: 2, name: "Testing", color: "bg-blue-400" },
-  { id: 3, name: "UI/UX", color: "bg-purple-400" },
-];
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  showFormToggle,
+  showSideBarToggle,
+  setFilter,
+} from "@/lib/redux/features/taskSlice";
+import {
+  deleteCategory,
+  addCategory,
+} from "@/lib/redux/features/categoriesSlice";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { categorySchema } from "@/lib/validition/zodvalidition";
+import { CategoryFormValues } from "@/lib/types";
 
 const colorOptions = [
   "bg-teal-400",
@@ -23,43 +31,77 @@ const colorOptions = [
 ];
 
 export default function SideBar() {
+  const { showSideBar, filter } = useAppSelector((state) => state.tasks);
+  const { categories } = useAppSelector((state) => state.categories);
+  const dispatch = useAppDispatch();
+
   const [showAddForm, setShowAddForm] = useState(false);
-  const [categories, setCategories] = useState(initialCategories);
   const [newCategory, setNewCategory] = useState({
     name: "",
     color: "bg-teal-400",
   });
 
-  const handleAddCategory = (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+  });
+
+  const handleAddCategory = handleSubmit((data) => {
     if (newCategory.name.trim()) {
-      setCategories([
-        ...categories,
-        { id: Date.now(), name: newCategory.name, color: newCategory.color },
-      ]);
+      dispatch(
+        addCategory({
+          id: Date.now(),
+          name: newCategory.name,
+          color: newCategory.color,
+        })
+      );
       setNewCategory({ name: "", color: "bg-teal-400" });
       setShowAddForm(false);
     }
-  };
+  });
 
   const handleDeleteCategory = (id: number) => {
-    setCategories(categories.filter((category) => category.id !== id));
+    dispatch(deleteCategory(id));
   };
+
+  const handleAddTask = () => {
+    dispatch(showFormToggle(true));
+    dispatch(showSideBarToggle());
+  };
+
+  if (!showSideBar) return null;
 
   return (
     <div>
-      <div className="absolute bg-black/40 top-0 right-0 left-0 bottom-0 w-[100vw] z-10"></div>
-      <div className="bg-white dark:bg-slate-800 border-r-[1px] border-slate-200 dark:border-slate-700 flex flex-col w-64 h-[calc(100vh-85px)] absolute px-4 py-5 gap-5 z-20 overflow-y-auto">
-        <div className="flex items-center gap-2 justify-center bg-teal-500 dark:bg-teal-600 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl">
+      <div
+        onClick={() => dispatch(showSideBarToggle())}
+        className="absolute bg-black/40 top-0 right-0 left-0 bottom-0 w-full z-10 transition-all duration-300"
+      ></div>
+      <div className="bg-white dark:bg-slate-800 border-r-[1px] border-slate-200 dark:border-slate-700 flex flex-col w-64 h-[calc(100vh-82px)] absolute px-4 py-5 gap-5 z-20 overflow-y-auto">
+        <div
+          onClick={() => handleAddTask()}
+          className="cursor-pointer flex items-center gap-2 justify-center bg-teal-500 dark:bg-teal-600 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl"
+        >
           <Plus />
-          <button>New Task</button>
+          <button aria-label="Close" name="btn">
+            New Task
+          </button>
         </div>
 
         <div className="flex flex-col justify-center items-start">
           <span className="text-sm font-bold text-slate-500">FILTER TASKS</span>
           <div className="flex flex-col py-3 w-full gap-1">
             {["All Tasks", "Active", "Completed"].map((item, index) => (
-              <div key={index} className="p-1 font-medium px-2">
+              <div
+                onClick={() => dispatch(setFilter(item))}
+                key={index}
+                className={`p-1 font-medium px-3 rounded-md cursor-pointer ${
+                  filter === item && "text-teal-700 bg-teal-100"
+                } `}
+              >
                 <span>{item}</span>
               </div>
             ))}
@@ -79,9 +121,10 @@ export default function SideBar() {
                 ></div>
                 <span className="flex-grow">{category.name}</span>
                 <button
+                  aria-label="Close"
+                  name="btn"
                   onClick={() => handleDeleteCategory(category.id)}
                   className="text-slate-400 hover:text-red-500 transition-colors"
-                  aria-label={`Delete ${category.name} category`}
                 >
                   <X size={16} />
                 </button>
@@ -97,6 +140,7 @@ export default function SideBar() {
               >
                 <div className="mb-3">
                   <input
+                    {...register("name")}
                     type="text"
                     value={newCategory.name}
                     onChange={(e) =>
@@ -106,6 +150,11 @@ export default function SideBar() {
                     className="w-full p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
                     autoFocus
                   />
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mb-3">
@@ -115,6 +164,8 @@ export default function SideBar() {
                   <div className="flex flex-wrap gap-2">
                     {colorOptions.map((color, index) => (
                       <button
+                        aria-label="Close"
+                        name="btn"
                         key={index}
                         type="button"
                         className={`w-6 h-6 rounded-full ${color} flex items-center justify-center ${
@@ -125,7 +176,6 @@ export default function SideBar() {
                         onClick={() =>
                           setNewCategory({ ...newCategory, color })
                         }
-                        aria-label={`Select color ${index + 1}`}
                       >
                         {newCategory.color === color && (
                           <Check size={14} className="text-white" />
@@ -137,6 +187,8 @@ export default function SideBar() {
 
                 <div className="flex justify-end gap-2">
                   <button
+                    aria-label="Close"
+                    name="btn"
                     type="button"
                     onClick={() => setShowAddForm(false)}
                     className="px-3 py-1 text-sm bg-slate-200 dark:bg-slate-600 rounded hover:bg-slate-300 dark:hover:bg-slate-500"
@@ -144,6 +196,8 @@ export default function SideBar() {
                     Cancel
                   </button>
                   <button
+                    aria-label="Close"
+                    name="btn"
                     type="submit"
                     className="px-3 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600"
                   >
@@ -158,7 +212,9 @@ export default function SideBar() {
               onClick={() => setShowAddForm(true)}
             >
               <Plus width={18} />
-              <button type="button">Add Category</button>
+              <button aria-label="Close" name="btn" type="button">
+                Add Category
+              </button>
             </div>
           )}
         </div>

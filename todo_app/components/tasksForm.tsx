@@ -1,71 +1,99 @@
 "use client";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { addTask, showFormToggle } from "@/lib/redux/features/taskSlice";
+import { editTask } from "@/lib/redux/features/taskSlice";
+import { createTaskFormSchema } from "@/lib/validition/zodvalidition";
+import { TasksFormProps } from "@/lib/types";
 
-// Create a Zod schema for the entire form
-const TaskFormSchema = z.object({
-  tasktitle: z
-    .string()
-    .min(1, { message: "Title is required" })
-    .max(100, { message: "Title must be less than 100 characters" }),
-
-  taskdescription: z
-    .string()
-    .min(1, { message: "Description is required" })
-    .max(500, { message: "Description must be less than 500 characters" }),
-
-  priority: z.enum(["Low", "Medium", "High"], {
-    required_error: "Priority is required",
-    invalid_type_error: "Priority must be Low, Medium, or High",
-  }),
-
-  category: z.enum(["Development", "Testing", "UI/UX"], {
-    required_error: "Category is required",
-    invalid_type_error: "Category must be Development, Testing, or UI/UX",
-  }),
-
-  date: z
-    .string()
-    .min(1, { message: "Date is required" })
-    // Ensure it's a valid date
-    .refine((date) => !isNaN(new Date(date).getTime()), {
-      message: "Invalid date format",
-    })
-    // Ensure date is not in the past
-    .refine(
-      (date) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return new Date(date) >= today;
-      },
-      {
-        message: "Date cannot be in the past",
-      }
-    ),
-});
-
-type TTaskFormSchema = z.infer<typeof TaskFormSchema>;
-
-export default function TasksForm() {
+export default function TasksForm({
+  editingTask = null,
+  onCancelEdit = () => {},
+}: TasksFormProps) {
+  const { categories } = useAppSelector((state) => state.categories);
+  const TaskFormSchema = createTaskFormSchema(categories);
+  type TTaskFormSchema = z.infer<typeof TaskFormSchema>;
+  const dispatch = useAppDispatch();
+  const { showForm } = useAppSelector((state) => state.tasks);
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<TTaskFormSchema>({ resolver: zodResolver(TaskFormSchema) });
+
+  useEffect(() => {
+    if (editingTask) {
+      setValue("tasktitle", editingTask.title);
+      setValue("taskdescription", editingTask.description || "");
+      setValue("priority", editingTask.priority as "Low" | "Medium" | "High");
+      setValue("category", editingTask.category);
+      setValue("date", editingTask.date);
+      dispatch(showFormToggle(true));
+    }
+  }, [editingTask, setValue]);
+
+  const onSubmit = (data: TTaskFormSchema) => {
+    if (editingTask) {
+      dispatch(
+        editTask({
+          id: editingTask.id,
+          updatedTask: {
+            title: data.tasktitle,
+            date: data.date,
+            category: data.category,
+            priority: data.priority,
+            description: data.taskdescription,
+          },
+        })
+      );
+      onCancelEdit();
+    } else {
+      const newTask = {
+        id: Date.now(),
+        title: data.tasktitle,
+        completed: false,
+        date: data.date,
+        category: data.category,
+        priority: data.priority,
+        description: data.taskdescription,
+      };
+      dispatch(addTask(newTask));
+    }
+    reset();
+    dispatch(showFormToggle(false));
+  };
+
+  if (!showForm) {
+    return null;
+  }
 
   return (
     <form
-      onSubmit={handleSubmit((data) => console.log(data))}
-      className="flex flex-col bg-slate-50 dark:bg-slate-800 border-[1px] border-slate-200 dark:border-slate-500 p-4 rounded-xl gap-2 font-medium "
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col bg-slate-50 dark:bg-slate-800 border-[1px] border-slate-200 dark:border-slate-600 p-4 rounded-xl gap-2 font-medium "
     >
       <div className="flex items-center justify-between font-bold">
-        <span>Add New Task</span>
-        <X width={18} />
+        <span>{editingTask ? "Edit Task" : "Add New Task"}</span>
+        <X
+          width={18}
+          className="cursor-pointer"
+          onClick={() => {
+            if (editingTask) {
+              reset();
+              onCancelEdit();
+            }
+            dispatch(showFormToggle(false));
+          }}
+        />
       </div>
-      <div className="flex flex-col justify-center items-center pt-4 pb-2">
+
+      <div className="flex flex-col justify-center items-center pt-4 pb-2 ">
         <div className="bg-slate-100 dark:bg-slate-700 w-full border-[1px] border-slate-200 dark:border-slate-600 rounded-xl relative">
           <input
             {...register("tasktitle", { required: "Title is required" })}
@@ -120,9 +148,13 @@ export default function TasksForm() {
             className="bg-inherit w-full py-1 px-3 outline-none"
           >
             <option value="">Select Category</option>
-            <option value="Development">Development</option>
-            <option value="Testing">Testing</option>
-            <option value="UI/UX">UI/UX</option>
+            {categories.map((item, index) => {
+              return (
+                <option key={index} value={item.name}>
+                  {item.name}
+                </option>
+              );
+            })}
           </select>
           {errors?.category && (
             <p className="w-full absolute text-sm left-1 text-red-600 dark:text-red-600 mt-1 truncate whitespace-nowrap overflow-hidden">
@@ -146,12 +178,28 @@ export default function TasksForm() {
           )}
         </div>
       </div>
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        {editingTask && (
+          <button
+            aria-label="Close"
+            name="btn"
+            type="button"
+            onClick={() => {
+              reset();
+              onCancelEdit();
+            }}
+            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-xl"
+          >
+            Cancel
+          </button>
+        )}
         <button
+          aria-label="Close"
+          name="btn"
           type="submit"
           className="bg-teal-500 dark:bg-teal-600 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-xl"
         >
-          Add Task
+          {editingTask ? "Update Task" : "Add Task"}
         </button>
       </div>
     </form>
