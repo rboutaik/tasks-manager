@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import {  useEffect } from "react";
 import { X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,7 +36,7 @@ export default function TasksForm({
       setValue("date", editingTask.date);
       dispatch(showFormToggle(true));
     }
-  }, [editingTask, setValue]);
+  }, [editingTask, setValue, dispatch]);
 
   const onSubmit = (data: TTaskFormSchema) => {
     if (editingTask) {

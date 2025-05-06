@@ -2,7 +2,6 @@
 import NavBar from "@/components/navBar";
 import SideBar from "@/components/sideBar";
 import TasksList from "@/components/tasksList";
-import ThemeToggle from "@/components/themeToggle";
 
 
 export default function Home() {

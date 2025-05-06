@@ -49,7 +49,7 @@ export default function SideBar() {
     resolver: zodResolver(categorySchema),
   });
 
-  const handleAddCategory = handleSubmit((data) => {
+  const handleAddCategory = handleSubmit(() => {
     if (newCategory.name.trim()) {
       dispatch(
         addCategory({
