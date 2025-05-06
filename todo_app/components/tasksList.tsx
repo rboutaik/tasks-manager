@@ -8,6 +8,8 @@ import {
   CheckSquare,
   Trash,
   CheckCheck,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import TasksForm from "./tasksForm";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -27,15 +29,22 @@ import { Task } from "@/lib/types";
 export default function TasksList() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [spreadItem, setSpreadItem] = useState(-1);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const dispatch = useAppDispatch();
   const { tasks, selectedTasks, searchTerm, filter } = useAppSelector(
     (state) => state.tasks
   );
   const { categories } = useAppSelector((state) => state.categories);
 
-  const filteredTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTasks = tasks
+    .filter((task) =>
+      task.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
 
   const filteredTaskIds = filteredTasks.map((task) => task.id);
   const allSelected =
@@ -57,6 +66,11 @@ export default function TasksList() {
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const handleSortByDate = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    setCurrentPage(1);
+  };
 
   const handleSelectAll = () => {
     dispatch(selectAllTasks(filteredTaskIds));
@@ -114,28 +128,41 @@ export default function TasksList() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
+            onClick={handleSortByDate}
+            className={`flex items-center gap-1 py-1 px-3 text-sm rounded-md ${
+                'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
             aria-label="Close"
-            name="btn"
+          >
+            <span>Sort by Date</span>
+            {sortOrder === 'asc' ? (
+              <ArrowUp size={16} />
+            ) : (
+              <ArrowDown size={16} />
+            )}
+          </button>
+
+          <button
+            aria-label="Close"
             onClick={handleDeleteCompleted}
-            className="flex items-center gap-1 py-1 px-3 text-sm bg-teal-500 hover:bg-teal-600 text-white  rounded-md transition-colors"
+            className="flex items-center gap-1 py-1 px-3 text-sm bg-teal-500 hover:bg-teal-600 text-white rounded-md transition-colors"
           >
             <CheckCheck size={16} />
             <span>Delete Completed</span>
           </button>
+          
           {selectedTasks.length > 0 && (
             <>
               <button
                 aria-label="Close"
-                name="btn"
                 onClick={handleCompleteSelected}
-                className="flex items-center gap-1 py-1 px-3 text-sm bg-green-500  text-white rounded-md hover:bg-green-600 transition-colors"
+                className="flex items-center gap-1 py-1 px-3 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
               >
                 <CheckCheck size={16} />
                 <span>Complete</span>
               </button>
               <button
                 aria-label="Close"
-                name="btn"
                 onClick={handleDeleteSelected}
                 className="flex items-center gap-1 py-1 px-3 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
               >
@@ -146,7 +173,6 @@ export default function TasksList() {
           )}
           <button
             aria-label="Close"
-            name="btn"
             onClick={handleSelectAll}
             className={`flex items-center gap-1 py-1 px-3 text-sm rounded-md transition-colors ${
               allSelected
@@ -185,7 +211,6 @@ export default function TasksList() {
               <div className="flex items-center justify-start gap-3">
                 <button
                   aria-label="Close"
-                  name="btn"
                   onClick={() => handleToggleComplete(task.id)}
                   className={`flex-shrink-0 mt-1 w-5 h-5 rounded-md flex items-center justify-center ${
                     task.completed
@@ -209,11 +234,13 @@ export default function TasksList() {
                 width={22}
                 className="cursor-pointer hover:text-blue-500"
                 onClick={() => setEditingTask(task)}
+                aria-label="Close"
               />
               <Trash2
                 width={22}
                 className="cursor-pointer hover:text-red-500"
                 onClick={() => handleDeleteTask(task.id)}
+                aria-label="Close"
               />
             </div>
           </div>
@@ -257,7 +284,7 @@ export default function TasksList() {
             }
           >
             <span className="text-xs font-bold text-teal-600 dark:text-teal-400 cursor-pointer">
-              {task.id !== spreadItem ? "Show" : "Hide"} Desciption
+              {task.id !== spreadItem ? "Show" : "Hide"} Description
             </span>
           </div>
           {spreadItem === task.id && (
@@ -279,7 +306,6 @@ export default function TasksList() {
           <nav className="flex items-center gap-1">
             <button
               aria-label="Close"
-              name="btn"
               onClick={() => paginate(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 disabled:opacity-50"
@@ -291,7 +317,6 @@ export default function TasksList() {
               (number) => (
                 <button
                   aria-label="Close"
-                  name="btn"
                   key={number}
                   onClick={() => paginate(number)}
                   className={`px-3 py-1 rounded-md ${
@@ -307,7 +332,6 @@ export default function TasksList() {
 
             <button
               aria-label="Close"
-              name="btn"
               onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 disabled:opacity-50"
